@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+# Things Jon added
+*.depend
+*.layout
