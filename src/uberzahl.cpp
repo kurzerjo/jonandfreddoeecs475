@@ -18,13 +18,13 @@ uberzahl::uberzahl ( void )
   convert_to_numeric();
 }
 
-uberzahl::uberzahl ( largeType number ){
+uberzahl::uberzahl ( int number ){
   positive = true;
-  value_vector.push_back(number);
-  while ( number != 0 ){
-    number = number >> maxBits;
-    value_vector.push_back(number);
+  if(number<0) {
+    positive = false;
+    number = -number;
   }
+  value_vector.push_back(number);
 }
 
 uberzahl::uberzahl ( const char* number ,int base){
@@ -73,7 +73,7 @@ uberzahl::uberzahl ( const char* number ,int base){
       }
       value_vector.push_back(digit);
     }
-    
+
   } else {
     std::cout << "unknown base" << std::endl;
     assert(0);
@@ -272,7 +272,7 @@ uberzahl uberzahl::operator / ( const uberzahl& number ) const
 {
 	uberzahl x = *this;
 	uberzahl y = number;
-	uberzahl q = 0ULL;
+	uberzahl q = "0";
 	assert( y != "0" ); // y can not be 0 in our division algorithm
 	if ( x < y ) return q; // return 0 since y > x
 	x.clean_bits();
@@ -416,7 +416,7 @@ std::ostream& operator << ( std::ostream& ost, const uberzahl& number ){
 }
 
 // Comparator operators
-// Removed the padding necessity to allow them to be 
+// Removed the padding necessity to allow them to be
 // true const& passes
 bool uberzahl::operator <= (const uberzahl& rhs) const
 {
@@ -444,7 +444,7 @@ bool uberzahl::operator <= (const uberzahl& rhs) const
     else if ( value_vector[i-1] < rhs.value_vector[i-1] )
       return positive;
 
-  return true; 
+  return true;
 }
 
 bool uberzahl::operator >= (const uberzahl& rhs) const
@@ -473,7 +473,7 @@ bool uberzahl::operator >= (const uberzahl& rhs) const
     else if ( value_vector[i-1] > rhs.value_vector[i-1] )
       return positive;
 
-  return true; 
+  return true;
 }
 
 bool uberzahl::operator < ( const uberzahl& rhs ) const
@@ -635,5 +635,4 @@ uberzahl random ( const uberzahl& a, const uberzahl& b )
   retval = (retval % ( b-a )) + a;
   return retval;
 }
-
 

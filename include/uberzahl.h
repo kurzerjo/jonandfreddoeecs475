@@ -14,7 +14,7 @@ class uberzahl {
     uberzahl ( void );
     ~uberzahl ( void );
     uberzahl ( const char*, int base=10 );
-    uberzahl ( largeType );
+    uberzahl ( int );
     uberzahl ( const uberzahl& );
 //    uberzahl( const mpz_class& );
     const uberzahl& operator = ( const uberzahl& );
@@ -53,12 +53,12 @@ class uberzahl {
     // uses the rand function - to seed use srand (unsigned int seed);
     uberzahl random ( mediumType );
 
-    std::string convert_to_string ( void ) const;
-  private:
+//  private:
     std::string string_value;
     bool positive;
     std::vector<smallType> value_vector;
     void convert_to_numeric ( void );
+    std::string convert_to_string ( void ) const;
     void clean_bits ( void );
 };
 
