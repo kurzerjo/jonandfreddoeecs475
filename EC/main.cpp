@@ -67,14 +67,14 @@ ECpoint ECpoint::operator + (const ECpoint &a) const {
 
 ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
 	//Find the sum of p+p+...+p (vtimes)
-	ECpoint retPoint(1);
+	ECpoint retPoint(1);    // initialize retPoint to the point at infinity
 	uberzahl mask("1");
 	uberzahl zmask("0");
 
 	while(v != zmask) {
         if((v & mask) == mask) retPoint = retPoint + p;
-        p = p+p;
         v = v>>1;
+        p = p+p;
 	}
 
 	return retPoint;
@@ -83,29 +83,15 @@ ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
 Zp ECsystem::power(Zp val, uberzahl pow) {
 	//Find the product of val*val*...*val (pow times)
 
-    uberzahl uz_value(val.getValue());
-    string s       = uz_value.convert_to_string();
-    string s_power = pow.convert_to_string();
-    string p       = PRIME.convert_to_string();
-
-    mpz_t mpz_value, mpz_power, mpz_prime;
-    mpz_init_set_str(mpz_value,      s.c_str(),0);
-    mpz_init_set_str(mpz_power,s_power.c_str(),0);
-    mpz_init_set_str(mpz_prime,      p.c_str(),0);
-
-    mpz_powm(mpz_value, mpz_value, mpz_power, mpz_prime);
-
-    char a[256];
-    mpz_get_str (a, 10, mpz_value);
-    uberzahl retval(a);
-
-    Zp Zp_retval(retval);
-
-    mpz_clear(mpz_value);
-    mpz_clear(mpz_power);
-    mpz_clear(mpz_prime);
-
-	return Zp_retval;
+    Zp result(1);       // base case
+	uberzahl mask("1");
+	uberzahl zmask("0");
+	while(pow != zmask) {
+        if((pow & mask) == mask) result = result * val;
+        pow = pow>>1;
+        val = val*val;
+	}
+	return result;
 }
 
 
@@ -176,24 +162,26 @@ int main(void){
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
 
-    ECpoint a(GX,GY);
-    ECpoint b = a;
-    for(int i = 1; i <= 50; i++) {
-        cout << i << "G = " << endl
-        << a.repeatSum(b,uberzahl(i))  << endl
-        << a << endl;
-        a = b+a;
-
-    }
-    cout << endl;
+//    ECpoint a(GX,GY);
+//    ECpoint b = a;
+//    for(int i = 1; i <= 50; i++) {
+//        cout << i << "G = " << endl
+//        << a.repeatSum(b,uberzahl(i))  << endl
+//        << a << endl;
+//        a = b+a;
+//
+//    }
+//    cout << endl;
 
 	ECpoint publicKey = keys.first;
 	cout << "Public key is: " << publicKey << endl;
 
+
+
 //	cout << "Enter offset value for sender's private key" << endl;
 //	cin  >> incrementVal;
 //	uberzahl privateKey = XB + incrementVal;
-
+//
 //	pair<pair<Zp,Zp>, uberzahl> ciphertext
 //        = ec.encrypt(publicKey, privateKey, plaintext0,plaintext1);
 //	cout << "Encrypted ciphertext is: ("

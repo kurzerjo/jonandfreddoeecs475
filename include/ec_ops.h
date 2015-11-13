@@ -108,7 +108,8 @@ ECpoint operator * (const uberzahl &a, const ECpoint &b);
  * class ECsystem: Encryption and decryption functions of ec
  */
 class ECsystem{
-	private:
+    public:
+    //private:
 		uberzahl privateKey;
 		ECpoint publicKey;
 		ECpoint G; //Generator G

@@ -30,3 +30,4 @@
 # Things Jon added
 *.depend
 *.layout
+*.cscope_file_list
