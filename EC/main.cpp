@@ -13,24 +13,27 @@ using namespace std;
 Zp Zp::inverse() const {
 	// Implement the Extended Euclidean Algorithm to return the inverse mod PRIME
 
-    // The below does NOT use the Extended Euclidean Algorithm.
-    // But is WAS easy to implement.  We will swap out later and verify against this performance
-    string s = value.convert_to_string();
-    string p = PRIME.convert_to_string();
-    mpz_t mpz_value, mpz_prime;
+    uberzahl a(this->value);
+    uberzahl x(0);
+    uberzahl y(1);
+    uberzahl u(1);
+    uberzahl v(0);
+    uberzahl b(PRIME);
+    uberzahl q,r,m,n;
 
-    mpz_init_set_str(mpz_value,s.c_str(),0);
-    mpz_init_set_str(mpz_prime,p.c_str(),0);
-
-    mpz_invert(mpz_value, mpz_value, mpz_prime);    // now mpz_value holds the inverse
-
-    char a[256];
-    mpz_get_str (a, 10, mpz_value);
-    uberzahl retval(a);
-
-    mpz_clear(mpz_value);
-    mpz_clear(mpz_prime);
-	return retval;
+    while(a > 0) {
+        q = b/a;
+        r = b%a;
+        m = x-u*q;
+        n = y-v*q;
+        b = a;
+        a = r;
+        x = u;
+        y = v;
+        u = m;
+        v = n;
+    }
+    return x;
 }
 
 
@@ -111,7 +114,8 @@ uberzahl ECsystem::pointCompress(ECpoint e) {
 		if (e.y.getValue()%2 == 1)
 			compressedPoint = compressedPoint + 1;
 		}
-		//cout<<"For point  "<<e<<"  Compressed point is <<"<<compressedPoint<<"\n";
+		cout << "For point  " << e
+		     << ", Compressed point is " << compressedPoint << endl;
 		return compressedPoint;
 
 }
@@ -119,8 +123,18 @@ uberzahl ECsystem::pointCompress(ECpoint e) {
 ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
 	//Implement the delta function for decompressing the compressed point
 
-	assert(0);
-	return ECpoint(true);
+    uberzahl pairTest(compressedPoint & 1);
+    Zp x(compressedPoint>>1);
+    Zp y(compressedPoint >> 1);
+
+    y = y*y*y + Zp(A)*y + Zp(B);
+    y = power(y,(PRIME+1)/4);
+
+    if(pairTest == 0) y = Zp(PRIME) - y;
+
+//    cout << "For compressed point " << compressedPoint
+//         << ", Point is " << ECpoint(x,y) << endl;
+	return ECpoint(x,y);
 }
 
 
@@ -162,7 +176,12 @@ int main(void){
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
 
-//    ECpoint a(GX,GY);
+//    for(int i = 1; i <= 5; i++) {
+//        ECpoint a(5,2);
+//        a = a.repeatSum(a,uberzahl(i));
+//        ec.pointDecompress(ec.pointCompress(a));
+//    }
+
 //    ECpoint b = a;
 //    for(int i = 1; i <= 50; i++) {
 //        cout << i << "G = " << endl
@@ -172,10 +191,20 @@ int main(void){
 //
 //    }
 //    cout << endl;
+    for(int i = 1; i < 11; i++) {
+            for(int j = 1; j < 11; j++) {
+                Zp a(i);
+                Zp b(a.inverse());
+                Zp c(a*b);
+                cout << a << "*" << b << "%" << PRIME
+                     << "=" << c << endl;
+                assert(c == 1);
+            }
+    }
+    cout << endl;
 
-	ECpoint publicKey = keys.first;
-	cout << "Public key is: " << publicKey << endl;
-
+//	ECpoint publicKey = keys.first;
+//	cout << "Public key is: " << publicKey << endl;
 
 
 //	cout << "Enter offset value for sender's private key" << endl;
