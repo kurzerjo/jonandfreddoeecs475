@@ -3,29 +3,25 @@
 #include <cstdlib>
 #include <utility>
 #include <cassert>
+
+#include <time.h>  // I had to add this to make the rand seed work
+
 #include "ec_ops.h"
-
-#include <time.h>
-#include <gmp.h>
-
 using namespace std;
 
 Zp Zp::inverse() const {
 	// Implement the Extended Euclidean Algorithm to return the inverse mod PRIME
 
     uberzahl a(this->value);
-    uberzahl x(0);
-    uberzahl y(1);
-    uberzahl u(1);
-    uberzahl v(0);
-    uberzahl b(PRIME);
-    uberzahl q,r,m,n;
+    uberzahl x(0),y(1),u(1),v(0),b(PRIME);  // vars with initial values
+    uberzahl q,r,m,n;                       // temp variables
 
     while(a > 0) {
         q = b/a;
         r = b%a;
         m = x-u*q;
         n = y-v*q;
+
         b = a;
         a = r;
         x = u;
@@ -109,15 +105,13 @@ uberzahl ECsystem::pointCompress(ECpoint e) {
 	if(e.infinityPoint) {
 		cout<<"Point cannot be compressed as its INF-POINT"<<flush;
 		abort();
-		}
+    }
 	else {
-		if (e.y.getValue()%2 == 1)
-			compressedPoint = compressedPoint + 1;
-		}
-		cout << "For point  " << e
-		     << ", Compressed point is " << compressedPoint << endl;
-		return compressedPoint;
+        if (e.y.getValue()%2 == 1)
+            compressedPoint = compressedPoint + 1;
+    }
 
+    return compressedPoint;
 }
 
 ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
@@ -132,8 +126,6 @@ ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
 
     if(pairTest == 0) y = Zp(PRIME) - y;
 
-//    cout << "For compressed point " << compressedPoint
-//         << ", Point is " << ECpoint(x,y) << endl;
 	return ECpoint(x,y);
 }
 
@@ -142,16 +134,33 @@ pair<pair<Zp,Zp>,uberzahl> ECsystem::encrypt(ECpoint publicKey, uberzahl private
 	// You must implement elliptic curve encryption
 	//  Do not generate a random key. Use the private key that is passed from the main function
 
-	assert(0);
-	return make_pair(make_pair(0,0),0);
-}
+	ECpoint Q, R;
+	Zp C0, C1;
+	uberzahl C2;
 
+	Q = privateKey * G;
+	R = this->G.repeatSum(publicKey, privateKey);
+    cout << Q << endl;
+	C0 = plaintext0*R.x;
+	C1 = plaintext1*R.y;
+	C2 = pointCompress(Q);
+
+	return make_pair(make_pair(C0,C1),C2);
+}
 
 pair<Zp,Zp> ECsystem::decrypt(pair<pair<Zp,Zp>, uberzahl> ciphertext){
 	// Implement EC Decryption
 
-	assert(0);
-	return make_pair(0,0);
+	Zp C0(ciphertext.first.first);
+	Zp C1(ciphertext.first.second);
+	uberzahl C2(ciphertext.second);
+
+	ECpoint R(this->G.repeatSum(pointDecompress(C2),privateKey));
+	Zp M0(C0*R.x.inverse());
+	Zp M1(C1*R.y.inverse());
+
+
+	return make_pair(M0,M1);
 }
 
 
@@ -175,59 +184,26 @@ int main(void){
 
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
+	ECpoint publicKey = keys.first;
+	cout<<"Public key is: "<<publicKey<<"\n";
 
-//    for(int i = 1; i <= 5; i++) {
-//        ECpoint a(5,2);
-//        a = a.repeatSum(a,uberzahl(i));
-//        ec.pointDecompress(ec.pointCompress(a));
-//    }
+	cout<<"Enter offset value for sender's private key"<<endl;
+	cin>>incrementVal;
+	uberzahl privateKey = XB + incrementVal;
 
-//    ECpoint b = a;
-//    for(int i = 1; i <= 50; i++) {
-//        cout << i << "G = " << endl
-//        << a.repeatSum(b,uberzahl(i))  << endl
-//        << a << endl;
-//        a = b+a;
-//
-//    }
-//    cout << endl;
-    for(int i = 1; i < 11; i++) {
-            for(int j = 1; j < 11; j++) {
-                Zp a(i);
-                Zp b(a.inverse());
-                Zp c(a*b);
-                cout << a << "*" << b << "%" << PRIME
-                     << "=" << c << endl;
-                assert(c == 1);
-            }
-    }
-    cout << endl;
+	pair<pair<Zp,Zp>, uberzahl> ciphertext = ec.encrypt(publicKey, privateKey, plaintext0,plaintext1);
+	cout<<"Encrypted ciphertext is: ("<<ciphertext.first.first<<", "<<ciphertext.first.second<<", "<<ciphertext.second<<")\n";
+	pair<Zp,Zp> plaintext_out = ec.decrypt(ciphertext);
 
-//	ECpoint publicKey = keys.first;
-//	cout << "Public key is: " << publicKey << endl;
+	cout << "Original plaintext is: (" << plaintext0 << ", " << plaintext1 << ")\n";
+	cout << "Decrypted plaintext: (" << plaintext_out.first << ", " << plaintext_out.second << ")\n";
 
 
-//	cout << "Enter offset value for sender's private key" << endl;
-//	cin  >> incrementVal;
-//	uberzahl privateKey = XB + incrementVal;
-//
-//	pair<pair<Zp,Zp>, uberzahl> ciphertext
-//        = ec.encrypt(publicKey, privateKey, plaintext0,plaintext1);
-//	cout << "Encrypted ciphertext is: ("
-//         << ciphertext.first.first << ", "
-//         << ciphertext.first.second << ", "
-//         << ciphertext.second <<")\n";
-//	pair<Zp,Zp> plaintext_out = ec.decrypt(ciphertext);
+	if(plaintext0 == plaintext_out.first && plaintext1 == plaintext_out.second)
+		cout << "Correct!" << endl;
+	else
+		cout << "Plaintext different from original plaintext." << endl;
 
-//	cout << "Original plaintext is: (" << plaintext0 << ", " << plaintext1 << ")\n";
-//	cout << "Decrypted plaintext: (" << plaintext_out.first << ", " << plaintext_out.second << ")\n";
-
-
-//	if(plaintext0 == plaintext_out.first && plaintext1 == plaintext_out.second)
-//		cout << "Correct!" << endl;
-//	else
-//		cout << "Plaintext different from original plaintext." << endl;
-//    cout << keys << endl;
 	return 1;
 
 }

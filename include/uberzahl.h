@@ -53,7 +53,7 @@ class uberzahl {
     // uses the rand function - to seed use srand (unsigned int seed);
     uberzahl random ( mediumType );
 
-//  private:
+  private:
     std::string string_value;
     bool positive;
     std::vector<smallType> value_vector;

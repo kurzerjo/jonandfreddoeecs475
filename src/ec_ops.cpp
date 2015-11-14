@@ -76,4 +76,3 @@ pair <ECpoint, uberzahl> ECsystem::generateKeys(){
 	return pair <ECpoint, uberzahl> (publicKey, privateKey);
 }
 
-
