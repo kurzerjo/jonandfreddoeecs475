@@ -15,7 +15,6 @@ Zp Zp::inverse() const {
     uberzahl a(this->value);
     uberzahl x(0),y(1),u(1),v(0),b(PRIME);  // vars with initial values
     uberzahl q,r,m,n;                       // temp variables
-
     while(a > 0) {
         q = b/a;
         r = b%a;
@@ -24,8 +23,10 @@ Zp Zp::inverse() const {
 
         b = a;
         a = r;
+
         x = u;
         y = v;
+
         u = m;
         v = n;
     }
@@ -50,8 +51,8 @@ ECpoint ECpoint::operator + (const ECpoint &a) const {
 	if(x_P == x_Q && y_P == (-y_Q)) return ECpoint(1);
 
     if( x_P == x_Q && y_P == y_Q) {   // special case for lambda
-        denom  = Zp(2)*y_P;
-        lambda = (Zp(3)*x_P*x_P+A)*denom.inverse();
+        denom  = y_P + y_P;
+        lambda = ( (x_P + x_P + x_P) * x_P + A) * denom.inverse();
     } else {
         denom  =  x_Q - x_P;
         lambda = (y_Q - y_P)*denom.inverse();
@@ -66,14 +67,13 @@ ECpoint ECpoint::operator + (const ECpoint &a) const {
 
 ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
 	//Find the sum of p+p+...+p (vtimes)
-	ECpoint retPoint(1);    // initialize retPoint to the point at infinity
-	uberzahl mask("1");
-	uberzahl zmask("0");
 
-	while(v != zmask) {
-        if((v & mask) == mask) retPoint = retPoint + p;
-        v = v>>1;
-        p = p+p;
+	ECpoint retPoint(1);    // initialize retPoint to the point at infinity
+
+	while(v > 0) {
+        if(v.bit(0)) retPoint = retPoint + p;
+        v = v >> 1;
+        p = p + p;
 	}
 
 	return retPoint;
@@ -122,7 +122,7 @@ ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
     Zp y(compressedPoint >> 1);
 
     y = y*y*y + Zp(A)*y + Zp(B);
-    y = power(y,(PRIME+1)/4);
+    y = power(y,(PRIME+1)>>2);
 
     if(pairTest == 0) y = Zp(PRIME) - y;
 
@@ -180,7 +180,6 @@ int main(void){
 	ECsystem ec;
 	unsigned long incrementVal;
 	pair <ECpoint, uberzahl> keys = ec.generateKeys();
-
 
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
