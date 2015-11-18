@@ -179,7 +179,7 @@ int main(void){
 	srand(time(0));
 	ECsystem ec;
 	unsigned long incrementVal;
-	pair <ECpoint, uberzahl> keys = ec.generateKeys();
+    pair <ECpoint, uberzahl> keys = ec.generateKeys();
 
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
