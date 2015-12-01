@@ -10,7 +10,7 @@ using namespace std;
 /*
  * Parameters for EC and transform into constants
  */
-#if 1
+#if 0
 #define PRIME_STR "115792089237316195423570985008687907853269984665640564039457584007913129639747"
 #define ORDER_STR "115792089237316195423570985008687907853233080465625507841270369819257950283813"
 #define A_STR  "-3"
@@ -46,7 +46,7 @@ using namespace std;
 #define XA_STR      "3923749782938239879872342352653454635499797978273492734" //private Key of receiver
 #define XB_STR      "7" //private key of sender
 #endif
-#if 0
+#if 1
 #define PRIME_STR "11"
 #define ORDER_STR "13"
 #define A_STR  "1"

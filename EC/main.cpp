@@ -12,23 +12,23 @@ using namespace std;
 Zp Zp::inverse() const {
 	// Implement the Extended Euclidean Algorithm to return the inverse mod PRIME
 
+    // We want to find the inverse of a, so
+    // x(a) + y*(b) = 1
+    // will result in x = inverse of a
     uberzahl a(this->value);
     uberzahl x(0),y(1),u(1),v(0),b(PRIME);  // vars with initial values
     uberzahl q,r,m,n;                       // temp variables
     while(a > 0) {
-        q = b/a;
-        r = b%a;
-        m = x-u*q;
-        n = y-v*q;
-
-        b = a;
-        a = r;
-
-        x = u;
-        y = v;
-
-        u = m;
-        v = n;
+        q = b/a;    // calculate quotient
+        r = b%a;    // calculate remainder
+        m = x-u*q;  //
+        n = y-v*q;  //
+        b = a;      //
+        a = r;      //
+        x = u;      //
+        y = v;      //
+        u = m;      //
+        v = n;      //
     }
     return x;
 }
@@ -66,9 +66,10 @@ ECpoint ECpoint::operator + (const ECpoint &a) const {
 
 
 ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
-	//Find the sum of p+p+...+p (vtimes)
+	//Find the sum of p+p+...+p (v times)
 
-	ECpoint retPoint(1);    // initialize retPoint to the point at infinity
+	assert(v >= 0);
+    ECpoint retPoint(1);    // initialize retPoint to the point at infinity
 
 	while(v > 0) {
         if(v.bit(0)) retPoint = retPoint + p;
@@ -81,6 +82,8 @@ ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
 
 Zp ECsystem::power(Zp val, uberzahl pow) {
 	//Find the product of val*val*...*val (pow times)
+
+    assert(pow >= 0);
 
     Zp result(1);       // base case
 	uberzahl mask("1");
@@ -118,7 +121,7 @@ ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
 	//Implement the delta function for decompressing the compressed point
 
     uberzahl pairTest(compressedPoint & 1);
-    Zp x(compressedPoint>>1);
+    Zp x(compressedPoint >> 1);
     Zp y(compressedPoint >> 1);
 
     y = y*y*y + Zp(A)*y + Zp(B);
@@ -177,9 +180,11 @@ pair<Zp,Zp> ECsystem::decrypt(pair<pair<Zp,Zp>, uberzahl> ciphertext){
 
 int main(void){
 	srand(time(0));
+
 	ECsystem ec;
 	unsigned long incrementVal;
     pair <ECpoint, uberzahl> keys = ec.generateKeys();
+
 
 	Zp plaintext0(MESSAGE0);
 	Zp plaintext1(MESSAGE1);
