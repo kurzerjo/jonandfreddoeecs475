@@ -17,7 +17,6 @@ Zp Zp::inverse() const {
     // x(a) + y*(b) = 1
     // will result in x = inverse of a
     uberzahl a(this->value);
-<<<<<<< HEAD
     uberzahl x(0),y(1),u(1),v(0),b(PRIME);  // vars with initial values
     uberzahl q,r,m,n;                       // temp variables
     while(a > 0) {
@@ -31,26 +30,6 @@ Zp Zp::inverse() const {
         y = v;      //
         u = m;      //
         v = n;      //
-=======
-    uberzahl x(0);
-    uberzahl y(1);
-    uberzahl u(1);
-    uberzahl v(0);
-    uberzahl b(PRIME);
-    uberzahl q,r,m,n;
-
-    while(a > 0) {
-        q = b/a;
-        r = b%a;
-        m = x-u*q;
-        n = y-v*q;
-        b = a;
-        a = r;
-        x = u;
-        y = v;
-        u = m;
-        v = n;
->>>>>>> parent of 5ca0a76... Project functionality complete
     }
     return x;
 }
