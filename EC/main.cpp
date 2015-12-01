@@ -1,3 +1,5 @@
+// Project partner note: Jonathan Kurzer (kurzerjo) and Fred Buhler (fbuhler)
+
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -189,41 +191,8 @@ pair<Zp,Zp> ECsystem::decrypt(pair<pair<Zp,Zp>, uberzahl> ciphertext){
  */
 
 
-void myTest(void) {
-    ECsystem ec;
-    Zp incrementVal = rand();
-
-    pair <ECpoint, uberzahl> keys = ec.generateKeys();
-    ECpoint publicKey = keys.first;
-
-
-    Zp plaintext0(MESSAGE0);
-    Zp plaintext1(MESSAGE1);
-    for(auto i = 0; i<3; i++) {
-        incrementVal = incrementVal + rand();
-        uberzahl privateKey = XB + incrementVal.getValue();
-        // Zp tmp(privateKey);
-        ECpoint Q = privateKey * ec.G;
-        ECpoint R = privateKey * publicKey;
-        cout << i << ": " << incrementVal << " ";
-
-        if(!(Q.infinityPoint || R.infinityPoint)) {
-            pair<pair<Zp,Zp>, uberzahl> ciphertext = ec.encrypt(publicKey, privateKey, plaintext0,plaintext1);
-            pair<Zp,Zp> plaintext_out = ec.decrypt(ciphertext);
-            if(plaintext0 == plaintext_out.first && plaintext1 == plaintext_out.second)
-                cout << "Correct!" << endl;
-            else
-                cout << "Plaintext different from original plaintext." << endl;
-        }
-        else cout << " INVALID" << endl;
-    }
-}
-
 int main(void){
 	srand(time(0));
-
-    myTest();
-    return 1;
 
 	ECsystem ec;
 	unsigned long incrementVal;
