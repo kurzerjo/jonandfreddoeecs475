@@ -9,27 +9,35 @@
 #include "ec_ops.h"
 using namespace std;
 
+void gcd(uberzahl a, uberzahl b, uberzahl *g, uberzahl *x, uberzahl *y) {
+    // This is the inverse helper function
+
+    // returns (g,x,y) such that a(x) +  b(y) = g = gcd(a,b)
+
+    // Base case
+    if(a == 0) { *g = b; *x = 0; *y = 1; return;}
+
+    else {
+        uberzahl g_, y_, x_; // some temp vars to hold our data
+        gcd( b%a, a, &g_, &y_, &x_);    // Call the recursive function
+
+        // Update values to pass up by reference
+        *g = g_;
+        *x = x_ - (b/a) * y_;
+        *y = y_;
+    }
+    return;
+}
 Zp Zp::inverse() const {
 	// Implement the Extended Euclidean Algorithm to return the inverse mod PRIME
 
     uberzahl a(this->value);
-    uberzahl x(0),y(1),u(1),v(0),b(PRIME);  // vars with initial values
-    uberzahl q,r,m,n;                       // temp variables
+    uberzahl m(PRIME);      // vars with initial values
 
-    while(a > 0) {
-        q = b/a;
-        r = b%a;
-        m = x-u*q;
-        n = y-v*q;
+    uberzahl g,x,y;         // temp variables
+    gcd(a, m, &g, &x, &y);  // Helper function
 
-        b = a;
-        a = r;
-        x = u;
-        y = v;
-        u = m;
-        v = n;
-    }
-    return x;
+    return Zp(x);           // Cast and return inverse (mod PRIME)
 }
 
 
@@ -57,7 +65,7 @@ ECpoint ECpoint::operator + (const ECpoint &a) const {
         lambda = (y_Q - y_P)*denom.inverse();
     }
 
-    Zp x_R = lambda*lambda-x_P-x_Q;
+    Zp x_R = lambda*lambda-x_P-x_Q; // Equations directly from project spec
     Zp y_R = lambda*(x_P-x_R)-y_P;
 
 	return ECpoint(x_R,y_R);
@@ -70,9 +78,10 @@ ECpoint ECpoint::repeatSum(ECpoint p, uberzahl v) const {
 	uberzahl mask("1");
 	uberzahl zmask("0");
 
+    // Calculate the "multiplication" using repeated "squaring"
 	while(v != zmask) {
         if((v & mask) == mask) retPoint = retPoint + p;
-        v = v>>1;
+        v = v >> 1;
         p = p+p;
 	}
 
@@ -85,6 +94,8 @@ Zp ECsystem::power(Zp val, uberzahl pow) {
     Zp result(1);       // base case
 	uberzahl mask("1");
 	uberzahl zmask("0");
+
+    // Calculate the power using repeated squaring
 	while(pow != zmask) {
         if((pow & mask) == mask) result = result * val;
         pow = pow>>1;
@@ -117,14 +128,16 @@ uberzahl ECsystem::pointCompress(ECpoint e) {
 ECpoint ECsystem::pointDecompress(uberzahl compressedPoint){
 	//Implement the delta function for decompressing the compressed point
 
-    uberzahl pairTest(compressedPoint & 1);
-    Zp x(compressedPoint>>1);
-    Zp y(compressedPoint >> 1);
+    uberzahl pairTest(compressedPoint.bit(0));
+    Zp x(compressedPoint >> 1);
+    Zp y(x);
 
+    // Equations directly from project spec
     y = y*y*y + Zp(A)*y + Zp(B);
     y = power(y,(PRIME+1)/4);
 
-    if(pairTest == 0) y = Zp(PRIME) - y;
+    // Ensure LSB of y matches LSB of compressed point
+    if(pairTest != y.getValue().bit(0)) y = Zp(PRIME) - y;
 
 	return ECpoint(x,y);
 }
@@ -138,9 +151,9 @@ pair<pair<Zp,Zp>,uberzahl> ECsystem::encrypt(ECpoint publicKey, uberzahl private
 	Zp C0, C1;
 	uberzahl C2;
 
+    // Equations directly from project spec
 	Q = privateKey * G;
-	R = this->G.repeatSum(publicKey, privateKey);
-    cout << Q << endl;
+	R = privateKey * publicKey;
 	C0 = plaintext0*R.x;
 	C1 = plaintext1*R.y;
 	C2 = pointCompress(Q);
@@ -155,6 +168,7 @@ pair<Zp,Zp> ECsystem::decrypt(pair<pair<Zp,Zp>, uberzahl> ciphertext){
 	Zp C1(ciphertext.first.second);
 	uberzahl C2(ciphertext.second);
 
+    // Equations directly from project spec
 	ECpoint R(this->G.repeatSum(pointDecompress(C2),privateKey));
 	Zp M0(C0*R.x.inverse());
 	Zp M1(C1*R.y.inverse());
@@ -175,8 +189,42 @@ pair<Zp,Zp> ECsystem::decrypt(pair<pair<Zp,Zp>, uberzahl> ciphertext){
  */
 
 
+void myTest(void) {
+    ECsystem ec;
+    Zp incrementVal = rand();
+
+    pair <ECpoint, uberzahl> keys = ec.generateKeys();
+    ECpoint publicKey = keys.first;
+
+
+    Zp plaintext0(MESSAGE0);
+    Zp plaintext1(MESSAGE1);
+    for(auto i = 0; i<3; i++) {
+        incrementVal = incrementVal + rand();
+        uberzahl privateKey = XB + incrementVal.getValue();
+        // Zp tmp(privateKey);
+        ECpoint Q = privateKey * ec.G;
+        ECpoint R = privateKey * publicKey;
+        cout << i << ": " << incrementVal << " ";
+
+        if(!(Q.infinityPoint || R.infinityPoint)) {
+            pair<pair<Zp,Zp>, uberzahl> ciphertext = ec.encrypt(publicKey, privateKey, plaintext0,plaintext1);
+            pair<Zp,Zp> plaintext_out = ec.decrypt(ciphertext);
+            if(plaintext0 == plaintext_out.first && plaintext1 == plaintext_out.second)
+                cout << "Correct!" << endl;
+            else
+                cout << "Plaintext different from original plaintext." << endl;
+        }
+        else cout << " INVALID" << endl;
+    }
+}
+
 int main(void){
 	srand(time(0));
+
+    myTest();
+    return 1;
+
 	ECsystem ec;
 	unsigned long incrementVal;
 	pair <ECpoint, uberzahl> keys = ec.generateKeys();
